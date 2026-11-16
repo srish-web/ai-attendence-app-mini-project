@@ -1,27 +1,23 @@
 import streamlit as st
 
+# Single source for the app name and logo (also used by the teacher sidebar).
+APP_NAME = "Attende Tracker"
+LOGO_URL = "https://cdn-icons-png.flaticon.com/512/5850/5850276.png"
+
 
 def header_home():
-
-    logo_url = "https://cdn-icons-png.flaticon.com/512/5850/5850276.png"
-    
-    st.markdown(f"""
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:30px; margin-top:30px">
-            <img src='{logo_url}' style='height:100px;' />
-            <h1 style='text-align:center; color:#E0E3FF'>Attende Tracker</h1>
-        </div>   
-                
-                """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="at-hero">'
+        f'<img src="{LOGO_URL}" alt="" />'
+        f'<h1>{APP_NAME}</h1>'
+        f'<p>Attendance made simple with face and voice recognition.</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def header_dashboard():
-
-    logo_url = "https://cdn-icons-png.flaticon.com/512/5850/5850276.png"
-    
-    st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:center; gap:10px">
-            <img src='{logo_url}' style='height:85px;' />
-            <h2 style='text-align:left; color:#5865F2'>Attende Tracker</h1>
-        </div>   
-                
-                """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="at-brand"><img src="{LOGO_URL}" alt="" />{APP_NAME}</div>',
+        unsafe_allow_html=True,
+    )

@@ -1,22 +1,37 @@
+from html import escape
+
 import streamlit as st
+
+
 def subject_card(name, code, section, stats=None, footer_callback=None):
-    html = f"""
-        <div style="background:white; border-left: 8px solid #EB459E; padding:25px; border-radius: 20px; border: 1px solid black; margin-bottom:20px;">
-        <h3 style="margin:0; color: #1e293b; font-size: 1.5rem ">{name}</h3>
-        <p style="color:#64748b; margin:10px 0;">Code : <span style="background:#E0E3FF; color:#5865F2; padding:2px 8px; border-radius:5px;">{code} </span> | Section : {section}</p>
-        
-        """
-    
+    """Bordered card with subject details and an optional footer widget.
+
+    stats: list of (label, value) or (icon, label, value) tuples.
+    footer_callback: function that renders widgets (e.g. a button) inside the card.
+    """
+    parts = [
+        f'<div class="at-subject-name">{escape(str(name))}</div>',
+        '<div class="at-subject-meta">',
+        f'<span class="at-code">{escape(str(code))}</span>',
+    ]
+    if section:
+        parts.append(f'<span>Section {escape(str(section))}</span>')
+    parts.append('</div>')
+
     if stats:
-        html+= """
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        """
-        for icon, label, value in stats:
-            html+= f'<div style="background: #EB459E10; padding:5px 12px; border-radius:12px; font-size:0.9rem">{icon} <b>{value}</b> {label} </div>'
-        
-        html+= "</div>"
+        parts.append('<div class="at-stats">')
+        for stat in stats:
+            label, value = stat[-2], stat[-1]
+            icon = f"{stat[0]} " if len(stat) == 3 and stat[0] else ""
+            parts.append(
+                f'<div class="at-stat"><b>{escape(str(value))}</b>'
+                f'<span>{icon}{escape(str(label))}</span></div>'
+            )
+        parts.append('</div>')
 
-    st.markdown(html, unsafe_allow_html=True)
-
-    if footer_callback:
-        footer_callback()
+    # One compact string (no indentation or blank lines) so Markdown never
+    # mistakes part of it for a code block.
+    with st.container(border=True):
+        st.markdown("".join(parts), unsafe_allow_html=True)
+        if footer_callback:
+            footer_callback()
