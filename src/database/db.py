@@ -98,4 +98,17 @@ def get_attendance_for_teacher(teacher_id):
 
 
 
+def get_subject_students(subject_id):
+    response = (
+        supabase.table("subject_students")
+        .select("students(*)")
+        .eq("subject_id", subject_id)
+        .execute()
+    )
+
+    return [
+        row["students"]
+        for row in response.data
+        if row.get("students")
+    ]
 

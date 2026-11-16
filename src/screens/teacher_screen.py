@@ -10,7 +10,7 @@ from src.ui.base_layout import style_background_dashboard, style_base_layout
 from src.components.header import header_dashboard
 from src.components.footer import footer_dashboard
 from src.components.subject_card import subject_card
-from src.database.db import check_teacher_exists, create_teacher, teacher_login, get_teacher_subjects, get_attendance_for_teacher
+from src.database.db import check_teacher_exists, create_teacher, teacher_login, get_teacher_subjects, get_attendance_for_teacher, get_subject_students
 from src.components.dialog_create_subject import create_subject_dialog
 from src.components.dialog_share_subject import share_subject_dialog
 from src.components.dialog_add_photo import add_photos_dialog
@@ -178,39 +178,113 @@ def teacher_tab_take_attendance():
             st.rerun()
 
 
+@st.dialog("Enrolled Students", width="large")
+def show_subject_students(subject_id, subject_name):
+    st.caption(f"Students enrolled in {subject_name}")
+
+    students = get_subject_students(subject_id)
+
+    if not students:
+        st.info("No students enrolled in this subject yet.")
+        return
+
+    st.metric("Total enrolled students", len(students))
+
+    search = st.text_input(
+        "Search students",
+        placeholder="Enter student name..."
+    )
+
+    filtered = [
+        s for s in students
+        if search.lower() in s["name"].lower()
+    ]
+
+    if filtered:
+        df = pd.DataFrame([
+            {
+                "Student ID": s["student_id"],
+                "Name": s["name"]
+            }
+            for s in filtered
+        ])
+
+        st.dataframe(df, width="stretch", hide_index=True)
+    else:
+        st.warning("No matching students found.")
+
+
+
 def teacher_tab_manage_subjects():
     teacher_id = st.session_state.teacher_data['teacher_id']
+
     col1, col2 = st.columns([3, 1], vertical_alignment='center')
+
     with col1:
         st.header('Manage subjects')
+
     with col2:
-        if st.button('Create subject', type='primary', icon=':material/add:', width='stretch'):
+        if st.button(
+            'Create subject',
+            type='primary',
+            icon=':material/add:',
+            width='stretch'
+        ):
             create_subject_dialog(teacher_id)
 
     subjects = get_teacher_subjects(teacher_id)
+
     if subjects:
         cols = st.columns(2)
+
         for i, sub in enumerate(subjects):
             stats = [
                 ("Students", sub['total_students']),
                 ("Classes", sub['total_classes']),
             ]
 
-            def share_btn():
-                if st.button("Share code", key=f"share_{sub['subject_code']}", type='secondary',
-                             icon=":material/share:", width='stretch'):
-                    share_subject_dialog(sub['name'], sub['subject_code'])
-
             with cols[i % 2]:
+                def subject_actions(sub=sub):
+                    c1, c2 = st.columns(2)
+
+                    with c1:
+                        if st.button(
+                            "View Students",
+                            key=f"view_students_{sub['subject_id']}",
+                            type='secondary',
+                            icon=":material/groups:",
+                            width='stretch'
+                        ):
+                            show_subject_students(
+                                sub['subject_id'],
+                                sub['name']
+                            )
+
+                    with c2:
+                        if st.button(
+                            "Share code",
+                            key=f"share_{sub['subject_code']}",
+                            type='secondary',
+                            icon=":material/share:",
+                            width='stretch'
+                        ):
+                            share_subject_dialog(
+                                sub['name'],
+                                sub['subject_code']
+                            )
+
                 subject_card(
                     name=sub['name'],
                     code=sub['subject_code'],
                     section=sub['section'],
                     stats=stats,
-                    footer_callback=share_btn
+                    footer_callback=subject_actions
                 )
+
     else:
-        st.info("No subjects yet. Select Create subject to add your first one.")
+        st.info(
+            "No subjects yet. Select Create subject to add your first one."
+        )
 
 
 def teacher_tab_attendance_records():
